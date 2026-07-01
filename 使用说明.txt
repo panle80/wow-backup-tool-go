@@ -5,35 +5,34 @@ WoW 插件备份恢复工具 v2.0
 一键备份/还原 World of Warcraft 的插件、配置和字体。
 支持 Windows 和 macOS。
 
-【对比旧版 v1.3】
+【对比旧版 v1.3 的改进】
   体积:  66 MB → 11 MB（缩小 6 倍）
   启动:  2-4 秒 → 瞬间启动
-  界面:  双 Tab 布局，操作流程更清晰
+  界面:  双 Tab 清晰布局，操作流程一目了然
   速度:  压缩优化 + 进度节流，备份还原更快
 
 【使用方法】
 
   创建备份：
     1. 点击「创建备份」Tab
-    2. 选择 WoW 安装路径（自动检测）
-    3. 勾选要备份的文件夹
+    2. 选择 WoW 安装路径（自动检测，也可手动浏览）
+    3. 勾选要备份的文件夹（Interface/WTF/Fonts）
     4. 选择保存位置（默认 Documents/WoWBackups）
     5. 点击「创建备份」
 
   还原备份：
     1. 点击「还原备份」Tab
-    2. 选择 .zip 备份文件（自动显示内容信息）
+    2. 选择目标 WoW 安装路径
     3. 勾选要还原的文件夹
-    4. 选择目标 WoW 安装路径
+    4. 选择 .zip 备份文件（会自动显示备份日期、大小、包含内容）
     5. 点击「还原备份」
 
   保留显示配置：
-    勾选后还原 WTF 时会保留当前的屏幕分辨率、窗口模式等本地设置。
+    勾选后在还原 WTF 时保留当前的屏幕分辨率、窗口模式等本地设置。
 
 【编译指南】
 
-  前置要求：Go 1.21+, Node.js 18+, Wails CLI
-
+  前置要求：Go 1.21+, Node.js 18+
   安装 Wails CLI:
     go install github.com/wailsapp/wails/v2/cmd/wails@latest
     wails doctor
@@ -43,7 +42,7 @@ WoW 插件备份恢复工具 v2.0
 
   Windows 构建:
     wails build -platform windows/amd64 -clean
-    输出: build/bin/WoWBackupTool.exe
+    输出: build/bin/WoWBackupTool.exe（约 11 MB，单文件）
 
   macOS 构建:
     wails build -platform darwin/arm64 -clean
@@ -56,8 +55,10 @@ WoW 插件备份恢复工具 v2.0
     "macos_paths": ["/Applications/WoW"]
   }
 
-【技术栈】
-  Go + Wails v2 + TypeScript（原 v1.3 为 Python + PyQt6）
+【技术信息】
+  Go + Wails v2 + TypeScript
+  压缩级别 3（快速模式）
+  进度刷新间隔 80ms（避免 UI 卡顿）
 
   作者: 潘公子大人
   License: MIT

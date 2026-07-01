@@ -66,12 +66,13 @@
     <div id="panel-restore" class="panel hidden">
 
       <div class="block">
-        <div class="label">从哪个备份文件还原</div>
+        <div class="label">还原到哪个 WoW</div>
         <div class="row">
-          <input type="text" id="rs-file" placeholder="点击右侧选择 .zip 备份文件" readonly />
-          <button id="rs-choose" class="btn">选择文件...</button>
+          <select id="rs-install"><option value="">正在检测...</option></select>
+          <button id="rs-refresh" class="btn">刷新</button>
+          <button id="rs-browse" class="btn">浏览...</button>
         </div>
-        <div id="rs-fileinfo" class="hint hidden"></div>
+        <div id="rs-status" class="hint"></div>
       </div>
 
       <div class="block">
@@ -85,13 +86,12 @@
       </div>
 
       <div class="block">
-        <div class="label">还原到哪个 WoW</div>
+        <div class="label">从哪个备份文件还原</div>
         <div class="row">
-          <select id="rs-install"><option value="">正在检测...</option></select>
-          <button id="rs-refresh" class="btn">刷新</button>
-          <button id="rs-browse" class="btn">浏览...</button>
+          <input type="text" id="rs-file" placeholder="点击右侧选择 .zip 备份文件" readonly />
+          <button id="rs-choose" class="btn">选择文件...</button>
         </div>
-        <div id="rs-status" class="hint"></div>
+        <div id="rs-fileinfo" class="hint hidden"></div>
       </div>
 
       <div id="rs-progress" class="block hidden progress">
