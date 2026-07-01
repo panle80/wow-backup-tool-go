@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WoW 插件备份恢复工具</title>
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- Header -->
+    <div class="bar">
+      <div class="bar-left">WoW Backup Tool</div>
+      <div class="bar-right">v2.0</div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button id="tab-backup" class="tab active">创建备份</button>
+      <button id="tab-restore" class="tab">还原备份</button>
+    </div>
+
+    <!-- =============================================== -->
+    <!-- BACKUP TAB                                       -->
+    <!-- =============================================== -->
+    <div id="panel-backup" class="panel">
+
+      <div class="block">
+        <div class="label">从哪个 WoW 备份</div>
+        <div class="row">
+          <select id="bk-install"><option value="">正在检测...</option></select>
+          <button id="bk-refresh" class="btn">刷新</button>
+          <button id="bk-browse" class="btn">浏览...</button>
+        </div>
+        <div id="bk-status" class="hint"></div>
+      </div>
+
+      <div class="block">
+        <div class="label">备份哪些内容</div>
+        <div class="checks">
+          <label class="check"><input type="checkbox" id="bk-interface" checked />Interface<div class="check-note">插件</div></label>
+          <label class="check"><input type="checkbox" id="bk-wtf" checked />WTF<div class="check-note">设置 · 配置 · 宏</div></label>
+          <label class="check"><input type="checkbox" id="bk-fonts" checked />Fonts<div class="check-note">字体</div></label>
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="label">保存到</div>
+        <div class="row">
+          <input type="text" id="bk-output" placeholder="~/Documents/WoWBackups" />
+          <button id="bk-outdir" class="btn">浏览...</button>
+        </div>
+      </div>
+
+      <div id="bk-progress" class="block hidden progress">
+        <div class="track"><div id="bk-fill" class="fill"></div></div>
+        <div id="bk-progtext" class="hint mono"></div>
+      </div>
+
+      <button id="btn-backup" class="btn-primary">创建备份</button>
+    </div>
+
+    <!-- =============================================== -->
+    <!-- RESTORE TAB                                      -->
+    <!-- =============================================== -->
+    <div id="panel-restore" class="panel hidden">
+
+      <div class="block">
+        <div class="label">从哪个备份文件还原</div>
+        <div class="row">
+          <input type="text" id="rs-file" placeholder="点击右侧选择 .zip 备份文件" readonly />
+          <button id="rs-choose" class="btn">选择文件...</button>
+        </div>
+        <div id="rs-fileinfo" class="hint hidden"></div>
+      </div>
+
+      <div class="block">
+        <div class="label">还原哪些内容</div>
+        <div class="checks">
+          <label class="check"><input type="checkbox" id="rs-interface" checked />Interface<div class="check-note">插件</div></label>
+          <label class="check"><input type="checkbox" id="rs-wtf" checked />WTF<div class="check-note">设置 · 配置 · 宏</div></label>
+          <label class="check"><input type="checkbox" id="rs-fonts" checked />Fonts<div class="check-note">字体</div></label>
+          <label class="check subtle"><input type="checkbox" id="rs-keepcfg" checked />保留当前显示配置<div class="check-note">分辨率、窗口模式等</div></label>
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="label">还原到哪个 WoW</div>
+        <div class="row">
+          <select id="rs-install"><option value="">正在检测...</option></select>
+          <button id="rs-refresh" class="btn">刷新</button>
+          <button id="rs-browse" class="btn">浏览...</button>
+        </div>
+        <div id="rs-status" class="hint"></div>
+      </div>
+
+      <div id="rs-progress" class="block hidden progress">
+        <div class="track"><div id="rs-fill" class="fill"></div></div>
+        <div id="rs-progtext" class="hint mono"></div>
+      </div>
+
+      <button id="btn-restore" class="btn-primary" disabled>选择备份文件后开始还原</button>
+    </div>
+
+    <!-- Status -->
+    <div id="status-bar" class="status">就绪</div>
+  </div>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

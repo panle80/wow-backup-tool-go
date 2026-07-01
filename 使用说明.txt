@@ -1,0 +1,63 @@
+WoW 插件备份恢复工具 v2.0
+==========================
+
+【简介】
+一键备份/还原 World of Warcraft 的插件、配置和字体。
+支持 Windows 和 macOS。
+
+【对比旧版 v1.3】
+  体积:  66 MB → 11 MB（缩小 6 倍）
+  启动:  2-4 秒 → 瞬间启动
+  界面:  双 Tab 布局，操作流程更清晰
+  速度:  压缩优化 + 进度节流，备份还原更快
+
+【使用方法】
+
+  创建备份：
+    1. 点击「创建备份」Tab
+    2. 选择 WoW 安装路径（自动检测）
+    3. 勾选要备份的文件夹
+    4. 选择保存位置（默认 Documents/WoWBackups）
+    5. 点击「创建备份」
+
+  还原备份：
+    1. 点击「还原备份」Tab
+    2. 选择 .zip 备份文件（自动显示内容信息）
+    3. 勾选要还原的文件夹
+    4. 选择目标 WoW 安装路径
+    5. 点击「还原备份」
+
+  保留显示配置：
+    勾选后还原 WTF 时会保留当前的屏幕分辨率、窗口模式等本地设置。
+
+【编译指南】
+
+  前置要求：Go 1.21+, Node.js 18+, Wails CLI
+
+  安装 Wails CLI:
+    go install github.com/wailsapp/wails/v2/cmd/wails@latest
+    wails doctor
+
+  开发模式（热更新）:
+    wails dev
+
+  Windows 构建:
+    wails build -platform windows/amd64 -clean
+    输出: build/bin/WoWBackupTool.exe
+
+  macOS 构建:
+    wails build -platform darwin/arm64 -clean
+    输出: build/bin/WoWBackupTool.app
+
+【自定义 WoW 路径】
+  在程序目录下创建 config.json:
+  {
+    "windows_paths": ["D:\\Games\\WoW"],
+    "macos_paths": ["/Applications/WoW"]
+  }
+
+【技术栈】
+  Go + Wails v2 + TypeScript（原 v1.3 为 Python + PyQt6）
+
+  作者: 潘公子大人
+  License: MIT

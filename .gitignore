@@ -1,0 +1,22 @@
+# Build output
+build/bin/
+build/appicon.png
+build/windows/
+
+# Auto-generated Wails bindings
+frontend/wailsjs/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/package.json.md5
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
