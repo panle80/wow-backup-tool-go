@@ -168,8 +168,13 @@ async function doRestore() {
 }
 
 function syncRestoreInstallSelect() {
-  // Copy options from backup install select to restore install select
-  rsInstall.innerHTML = bkInstall.innerHTML
+  rsInstall.innerHTML = ''
+  for (const i of installations) {
+    const o = document.createElement('option')
+    o.value = i.path; o.textContent = `${i.displayName} (${i.path})`
+    o.dataset.version = i.version; o.dataset.displayName = i.displayName
+    rsInstall.appendChild(o)
+  }
   if (bkInstall.selectedIndex >= 0) rsInstall.selectedIndex = bkInstall.selectedIndex
   onInstallChanged(rsInstall, rsStatus)
 }

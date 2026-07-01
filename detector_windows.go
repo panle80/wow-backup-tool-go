@@ -112,46 +112,67 @@ func (d *WoWDetector) detectBattleNet() []WoWInstallation {
 		}
 	}
 
-	// ---- Method 2: Legacy product.db (simple binary search) ----
-	// The old Battle.net agent stored install paths in a SQLite product.db.
-	// Since we want to avoid the CGO dependency of go-sqlite3, we do a
-	// lightweight scan: read the file as raw bytes and look for path-like
-	// strings containing "World of Warcraft". This is robust enough for the
-	// simple key-value store that the legacy product.db was.
+	// ---- Method 2: Legacy product.db ----
+	// Old Battle.net agent stored install paths in a SQLite database.
+	// We avoid CGO by scanning raw bytes for absolute Windows paths
+	// containing "World of Warcraft", validated before touching disk.
 	programData := os.Getenv("PROGRAMDATA")
 	if programData == "" {
 		programData = `C:\ProgramData`
 	}
 	dbPath := filepath.Join(programData, "Battle.net", "Agent", "product.db")
 	if data, err := os.ReadFile(dbPath); err == nil {
-		// Scan for WoW install paths embedded in the SQLite file
-		text := string(data)
-		// Look for paths containing "World of Warcraft"
+		lower := strings.ToLower(string(data))
+		searchFrom := 0
 		for {
-			idx := strings.Index(strings.ToLower(text), "world of warcraft")
+			idx := strings.Index(lower[searchFrom:], "world of warcraft")
 			if idx < 0 {
 				break
 			}
-			// Walk backward to find a plausible path start (drive letter or \\)
+			idx += searchFrom
+			searchFrom = idx + len("world of warcraft")
+
+			// Backtrack to a drive letter (X:) or UNC (\\)
 			start := idx
-			for start > 0 && text[start-1] != 0 && text[start-1] != '/' && text[start-1] != '\\' {
+			for start > 1 {
+				if (lower[start-1] == ':' && start >= 2 &&
+					lower[start-2] >= 'a' && lower[start-2] <= 'z') ||
+					(lower[start-1] == '\\' && start >= 2 &&
+						lower[start-2] == '\\') {
+					start -= 2
+					break
+				}
+				if lower[start-1] == 0 || lower[start-1] == '\n' {
+					break
+				}
 				start--
 			}
-			// Find the end of this string
+			if start >= idx-2 {
+				continue // no valid path prefix
+			}
+
+			// Forward to path end
 			end := idx
-			for end < len(text) && text[end] != 0 && text[end] != '\n' && text[end] != '\r' {
+			for end < len(lower) {
+				b := lower[end]
+				if b == 0 || b == '\n' || b == '\r' || b == '"' {
+					break
+				}
 				end++
 			}
-			candidate := strings.TrimSpace(text[start:end])
-			candidate = strings.Trim(candidate, "\x00\t ")
-			if dirExists(candidate) {
-				found := d.detectFromPaths([]string{candidate})
-				if len(found) > 0 {
-					logDetect("Found WoW via product.db scan: %s", candidate)
-				}
-				result = append(result, found...)
+
+			candidate := strings.TrimSpace(string(data[start:end]))
+			candidate = strings.Trim(candidate, "\x00\t \"'")
+
+			if len(candidate) < 10 || !dirExists(candidate) {
+				continue
 			}
-			text = text[end:]
+
+			found := d.detectFromPaths([]string{candidate})
+			if len(found) > 0 {
+				logDetect("Found WoW via product.db: %s", candidate)
+			}
+			result = append(result, found...)
 		}
 	}
 
