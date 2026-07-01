@@ -191,6 +191,18 @@ func (a *App) DefaultOutputPath() string {
 	return DefaultOutputDir()
 }
 
+// LoadSavedOutputDir returns the last used output directory, or empty string.
+// The frontend falls back to the default if empty.
+func (a *App) LoadSavedOutputDir() string {
+	return loadLastOutputDir()
+}
+
+// SaveOutputDir persists the given directory as the preferred save location.
+// Uses registry on Windows, UserDefaults on macOS — no config files created.
+func (a *App) SaveOutputDir(dir string) {
+	saveLastOutputDir(dir)
+}
+
 // ShowMessage shows a native message dialog.
 func (a *App) ShowMessage(dialogType, title, message string) (string, error) {
 	switch dialogType {

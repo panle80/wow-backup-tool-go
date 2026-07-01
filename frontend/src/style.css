@@ -130,7 +130,8 @@ input[readonly] { cursor:pointer; }
 .check:has(input:checked) { background:rgba(77,140,245,.06); border-color:rgba(77,140,245,.15); }
 .check.subtle:has(input:checked) { background:rgba(255,255,255,.02); border-color:var(--line); }
 .check input[type="checkbox"] { accent-color:var(--accent); width:14px; height:14px; flex-shrink:0; }
-.check-note { font-size:11px; color:var(--text3); margin-left:auto; }
+.check-title { font-size:12.5px; font-weight:600; color:var(--text); white-space:nowrap; flex-shrink:0; }
+.check-desc { font-size:11px; color:var(--text3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-left:auto; }
 
 /* ---- Hint / Status ---- */
 .hint { font-size:11px; color:var(--text3); }

@@ -2,7 +2,6 @@ package main
 
 import (
 	"archive/zip"
-	"compress/flate"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -39,7 +38,7 @@ func NewManifest(platforms []string) *BackupManifest {
 }
 
 // ---------------------------------------------------------------------------
-// System-file filtering (matches Python version exactly)
+// System-file filtering
 // ---------------------------------------------------------------------------
 
 var excludedNames = map[string]bool{
@@ -73,15 +72,11 @@ func pathShouldExclude(path string) bool {
 // ---------------------------------------------------------------------------
 
 // ZipManager handles backup creation and extraction.
-type ZipManager struct {
-	compressLevel int
-}
+type ZipManager struct{}
 
-// NewZipManager creates a new ZipManager with fast compression (level 3).
-// WoW addons are mostly .lua/.toc text and already-compressed assets,
-// so higher levels buy negligible size savings at significant CPU cost.
+// NewZipManager creates a new ZipManager.
 func NewZipManager() *ZipManager {
-	return &ZipManager{compressLevel: 3}
+	return &ZipManager{}
 }
 
 // progressThrottler limits callback frequency to avoid flooding the UI.
@@ -104,9 +99,9 @@ func (t *progressThrottler) emit(fn func(string, int, int), msg string, cur, tot
 
 // fileEntry describes a single file to be zipped.
 type fileEntry struct {
-	archivePath string // path inside the ZIP
-	diskPath    string // absolute path on disk
-	size        int64  // file size in bytes
+	archivePath string
+	diskPath    string
+	size        int64
 }
 
 // collectFiles walks the source directories and returns a flat list of files.
@@ -119,12 +114,9 @@ func (z *ZipManager) collectFiles(sourcePaths map[string]string) ([]fileEntry, i
 			if err != nil {
 				return err
 			}
-
-			// Skip excluded directories (don't walk into them)
 			if info.IsDir() && shouldExclude(info.Name()) {
 				return filepath.SkipDir
 			}
-			// Skip excluded files
 			if !info.IsDir() && shouldExclude(info.Name()) {
 				return nil
 			}
@@ -138,7 +130,6 @@ func (z *ZipManager) collectFiles(sourcePaths map[string]string) ([]fileEntry, i
 			}
 
 			archiveRel := filepath.Join(archiveName, rel)
-			// ZIP paths always use forward slashes
 			archiveRel = strings.ReplaceAll(archiveRel, "\\", "/")
 			files = append(files, fileEntry{
 				archivePath: archiveRel,
@@ -156,7 +147,6 @@ func (z *ZipManager) collectFiles(sourcePaths map[string]string) ([]fileEntry, i
 }
 
 // CreateBackup writes a ZIP file at outputPath containing the given folders.
-// progressFn is called with (message, currentBytes, totalBytes).
 func (z *ZipManager) CreateBackup(
 	sourcePaths map[string]string,
 	outputPath string,
@@ -170,7 +160,6 @@ func (z *ZipManager) CreateBackup(
 		return err
 	}
 
-	// Ensure output directory exists
 	if err := os.MkdirAll(filepath.Dir(outputPath), 0o755); err != nil {
 		return fmt.Errorf("create output dir: %w", err)
 	}
@@ -180,11 +169,6 @@ func (z *ZipManager) CreateBackup(
 		return fmt.Errorf("create zip file: %w", err)
 	}
 	defer outFile.Close()
-
-	// Set compression level (must be registered before creating the writer)
-	zip.RegisterCompressor(zip.Deflate, func(w io.Writer) (io.WriteCloser, error) {
-		return flate.NewWriter(w, z.compressLevel)
-	})
 
 	zipWriter := zip.NewWriter(outFile)
 	defer zipWriter.Close()
@@ -215,7 +199,6 @@ func (z *ZipManager) CreateBackup(
 		currentSize += fe.size
 	}
 
-	// Embed manifest.json inside the ZIP
 	manifestData, err := json.MarshalIndent(manifest, "", "  ")
 	if err != nil {
 		return fmt.Errorf("marshal manifest: %w", err)
@@ -243,13 +226,11 @@ func (z *ZipManager) ExtractBackup(
 	}
 	defer reader.Close()
 
-	// Resolve target to absolute and clean
 	targetPath, err = filepath.Abs(targetPath)
 	if err != nil {
 		return nil, fmt.Errorf("resolve target path: %w", err)
 	}
 
-	// Filter files
 	allFiles := make([]*zip.File, 0, len(reader.File))
 	for _, f := range reader.File {
 		if f.Name == "manifest.json" {
@@ -262,8 +243,7 @@ func (z *ZipManager) ExtractBackup(
 		if len(selectedFolders) > 0 {
 			include := false
 			for _, folder := range selectedFolders {
-				prefix := folder + "/"
-				if strings.HasPrefix(f.Name, prefix) {
+				if strings.HasPrefix(f.Name, folder+"/") {
 					include = true
 					break
 				}
@@ -284,7 +264,6 @@ func (z *ZipManager) ExtractBackup(
 			throttle.emit(progressFn, f.Name, i, total)
 		}
 
-		// Path-traversal protection
 		destPath := filepath.Join(targetPath, f.Name)
 		destPath = filepath.Clean(destPath)
 		if !strings.HasPrefix(destPath, targetPath+string(os.PathSeparator)) && destPath != targetPath {
@@ -298,7 +277,6 @@ func (z *ZipManager) ExtractBackup(
 			continue
 		}
 
-		// Ensure parent directory exists
 		if err := os.MkdirAll(filepath.Dir(destPath), 0o755); err != nil {
 			return nil, fmt.Errorf("mkdir %s: %w", filepath.Dir(destPath), err)
 		}
@@ -322,7 +300,6 @@ func (z *ZipManager) ExtractBackup(
 		}
 	}
 
-	// Read manifest
 	for _, f := range reader.File {
 		if f.Name == "manifest.json" {
 			rc, err := f.Open()
@@ -375,7 +352,6 @@ func (z *ZipManager) GetBackupInfo(backupPath string) (map[string]interface{}, e
 		fileCount++
 		totalSize += int64(f.UncompressedSize64)
 
-		// Extract top-level folder
 		parts := strings.SplitN(f.Name, "/", 2)
 		if len(parts) > 0 && parts[0] != "" && !shouldExclude(parts[0]) {
 			folders[parts[0]] = true
@@ -393,7 +369,6 @@ func (z *ZipManager) GetBackupInfo(backupPath string) (map[string]interface{}, e
 	info["formattedSize"] = formatSize(stat.Size())
 	info["topFolders"] = topFolders
 
-	// Read manifest
 	for _, f := range reader.File {
 		if f.Name == "manifest.json" {
 			rc, err := f.Open()
@@ -443,7 +418,6 @@ func (z *ZipManager) ListBackups(dir string) ([]map[string]interface{}, error) {
 		backups = append(backups, info)
 	}
 
-	// Sort by date descending
 	for i := 0; i < len(backups); i++ {
 		for j := i + 1; j < len(backups); j++ {
 			di, _ := backups[i]["date"].(string)

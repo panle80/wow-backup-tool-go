@@ -10,7 +10,8 @@ import {
   SelectDirectory,
   SelectFile,
   OpenFolder,
-  DefaultOutputPath,
+  LoadSavedOutputDir,
+  SaveOutputDir,
   ShowMessage,
 } from '../wailsjs/go/main/App'
 
@@ -73,7 +74,7 @@ bkRefresh.addEventListener('click', () => refreshInstallSelect(bkInstall, bkStat
 bkBrowse.addEventListener('click', () => browseInstallFor(bkInstall, bkStatus))
 bkOutDir.addEventListener('click', async () => {
   const p = await SelectDirectory('选择保存目录')
-  if (p) bkOutput.value = p
+  if (p) { bkOutput.value = p; void SaveOutputDir(p) }
 })
 bkInstall.addEventListener('change', () => onInstallChanged(bkInstall, bkStatus))
 btnBackup.addEventListener('click', doBackup)
@@ -278,6 +279,8 @@ EventsOn('backup:finished', async (path: string) => {
   busy = false; setBusy(false)
   bkProgress.classList.add('hidden'); bkFill.style.width = '0%'
   status('备份完成')
+  // Remember the directory for next time
+  if (bkOutput.value) void SaveOutputDir(bkOutput.value)
   const r = await ShowMessage('question','备份完成',`备份已创建:\n${path}`)
   if (r === 'yes') void OpenFolder(path)
 })
@@ -312,7 +315,11 @@ EventsOn('restore:error', async (err: string) => {
 // ========================================================
 
 async function init() {
-  bkOutput.placeholder = await DefaultOutputPath()
+  const saved = await LoadSavedOutputDir()
+  if (saved) {
+    bkOutput.value = saved
+    bkOutput.placeholder = saved
+  }
   await refreshInstallSelect(bkInstall, bkStatus)
 }
 

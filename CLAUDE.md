@@ -37,6 +37,10 @@ go vet ./...
 ├── detector_other.go      # Non-Windows stubs
 ├── zipper.go              # ZipManager — ZIP create/extract, manifest, throttled progress
 ├── backup.go              # BackupManager — orchestrates detect → zip → restore
+├── config.go              # Shared config types + config.json loader (custom WoW paths)
+├── config_windows.go      # Windows: registry-based output dir persistence
+├── config_darwin.go       # macOS: UserDefaults-based output dir persistence
+├── config_other.go        # Other platforms: no-op stubs
 ├── open_windows.go        # Windows: open folder in Explorer
 ├── open_darwin.go         # macOS: open folder in Finder
 ├── wails.json             # Wails project config
@@ -92,7 +96,7 @@ The `App` struct (`app.go`) exposes exported methods that Wails auto-binds to JS
 
 ### Performance
 
-- **Compression level 3** via `compress/flate` registered with `zip.RegisterCompressor` (was 6 in Python). Much faster, negligible size difference for WoW addons (mostly .lua text and pre-compressed assets).
+- **Default compression** (level 6) — Go's `archive/zip` uses Deflate internally. Custom compression level was attempted via `RegisterCompressor` but Go 1.26 panics on re-registration of the built-in Deflate method.
 - **Progress throttling** — emits at most every 80ms via `progressThrottler`, instead of per-file IPC calls. Thousands of addon files → ~12 UI updates/sec.
 
 ### WoW detection (Windows)
