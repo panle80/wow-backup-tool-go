@@ -2,6 +2,7 @@ package main
 
 import (
 	"archive/zip"
+	"compress/flate"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -180,6 +181,11 @@ func (z *ZipManager) CreateBackup(
 	}
 	defer outFile.Close()
 
+	// Set compression level (must be registered before creating the writer)
+	zip.RegisterCompressor(zip.Deflate, func(w io.Writer) (io.WriteCloser, error) {
+		return flate.NewWriter(w, z.compressLevel)
+	})
+
 	zipWriter := zip.NewWriter(outFile)
 	defer zipWriter.Close()
 
@@ -286,7 +292,9 @@ func (z *ZipManager) ExtractBackup(
 		}
 
 		if f.FileInfo().IsDir() {
-			os.MkdirAll(destPath, 0o755)
+			if err := os.MkdirAll(destPath, 0o755); err != nil {
+				return nil, fmt.Errorf("mkdir %s: %w", destPath, err)
+			}
 			continue
 		}
 

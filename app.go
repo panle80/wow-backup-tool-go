@@ -79,6 +79,12 @@ func (a *App) CreateBackup(installPath, version, displayName string, selectedFol
 	}
 
 	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				runtime.EventsEmit(a.ctx, "backup:error", fmt.Sprintf("panic: %v", r))
+			}
+		}()
+
 		path, err := a.manager.CreateBackup(inst, selectedFolders, outputDir,
 			func(msg string, cur, total int) {
 				runtime.EventsEmit(a.ctx, "backup:progress", ProgressData{

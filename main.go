@@ -28,7 +28,7 @@ func main() {
 		},
 
 		// Background colour before the frontend loads
-		BackgroundColour: &options.RGBA{R: 245, G: 245, B: 245, A: 1},
+		BackgroundColour: &options.RGBA{R: 11, G: 13, B: 15, A: 1},
 
 		OnStartup:  app.startup,
 		OnShutdown: app.shutdown,
