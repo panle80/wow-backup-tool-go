@@ -35,9 +35,6 @@ jobs:
 
   build-macos:
     runs-on: macos-latest
-    strategy:
-      matrix:
-        arch: [amd64, arm64]
     steps:
       - uses: actions/checkout@v4
 
@@ -55,11 +52,11 @@ jobs:
       - name: Copy icon
         run: cp huifubeifen.png build/appicon.png
 
-      - name: Build macOS (${{ matrix.arch }})
-        run: wails build -platform darwin/${{ matrix.arch }} -clean
+      - name: Build macOS (Apple Silicon)
+        run: wails build -platform darwin/arm64 -clean
 
       - name: Upload macOS artifact
         uses: actions/upload-artifact@v4
         with:
-          name: WoWBackupTool-macOS-${{ matrix.arch }}
+          name: WoWBackupTool-macOS
           path: build/bin/WoWBackupTool
