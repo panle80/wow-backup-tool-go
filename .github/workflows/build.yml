@@ -21,8 +21,10 @@ jobs:
       - name: Install Wails CLI
         run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
 
-      - name: Copy icon
-        run: Copy-Item huifubeifen.png build/appicon.png -Force
+      - name: Prepare icon
+        run: |
+          New-Item -ItemType Directory -Force -Path build
+          Copy-Item huifubeifen.png build/appicon.png -Force
 
       - name: Build Windows
         run: wails build -platform windows/amd64 -clean
@@ -49,8 +51,10 @@ jobs:
       - name: Install Wails CLI
         run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
 
-      - name: Copy icon
-        run: cp huifubeifen.png build/appicon.png
+      - name: Prepare icon
+        run: |
+          mkdir -p build
+          cp huifubeifen.png build/appicon.png
 
       - name: Build macOS (Apple Silicon arm64)
         run: wails build -platform darwin/arm64 -clean
