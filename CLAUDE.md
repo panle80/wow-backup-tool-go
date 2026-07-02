@@ -45,7 +45,8 @@ go vet ./...
 ├── open_darwin.go         # macOS: open folder in Finder
 ├── wails.json             # Wails project config
 ├── go.mod / go.sum        # Go module
-├── appicon.png            # App icon (1024×1024, used by Wails for all platforms)
+├── build.bat               # Windows build script (copies icon + wails build)
+├── huifubeifen.png          # App icon source (256×256, copied to build/appicon.png for Wails)
 ├── frontend/
 │   ├── index.html         # Two-tab layout (创建备份 / 还原备份)
 │   ├── package.json       # Vite dev server

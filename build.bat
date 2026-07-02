@@ -1,20 +1,16 @@
 @echo off
-REM ============================================================
-REM  WoW Backup Tool — Windows Build Script
-REM  需要: Go 1.21+, Node.js 18+, Wails CLI
-REM  首次使用请运行:
-REM    go install github.com/wailsapp/wails/v2/cmd/wails@latest
-REM    wails doctor
-REM ============================================================
+REM WoW Backup Tool - Windows Build Script
 
-echo [1/2] Installing frontend dependencies...
-cd frontend
-call npm install
-cd ..
+echo [1/3] Copying icon...
+copy /Y huifubeifen.png build\appicon.png >nul
 
-echo [2/2] Building Windows binary...
-wails build -platform windows/amd64 -nsis -clean
+echo [2/3] Clearing cached icon...
+if exist build\windows\ rd /s /q build\windows
+
+echo [3/3] Building...
+wails build -platform windows/amd64
 
 echo.
-echo Build complete! Output is in build\bin\
-pause
+echo Done: build\bin\WoWBackupTool.exe
+echo If the exe icon looks wrong, clear Windows icon cache:
+echo   del /f %LOCALAPPDATA%\IconCache.db ^& taskkill /f /im explorer.exe ^& start explorer.exe
