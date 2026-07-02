@@ -123,6 +123,37 @@ Before extracting, target folders are deleted with `os.RemoveAll()`. If `keepLoc
 
 Skips `.DS_Store`, `Thumbs.db`, `__MACOSX` directories, and `._*` Apple Double files during both backup and extraction. Path-traversal protection via `filepath.Clean` prefix check.
 
+### App icon
+
+Wails v2.12 reads the source icon from `build/appicon.png` (NOT the project root `appicon.png`).
+The first build copies Wails' embedded default (blue "W") into `build/appicon.png` as a starting
+point, and all subsequent builds reuse that cached copy.
+
+To use a custom icon:
+
+```bash
+# 1. Copy your PNG into the build directory (256×256 or 1024×1024 RGBA recommended)
+cp your_icon.png build/appicon.png
+
+# 2. Delete the cached windows directory so Wails regenerates icon.ico from your PNG
+rm -rf build/windows
+
+# 3. Normal build
+wails build -platform windows/amd64
+```
+
+Wails skips `icon.ico` regeneration if `build/windows/icon.ico` already exists — so deleting
+the entire `build/windows/` directory before building is the safest approach.
+
+**Windows icon cache:** After a fresh build, Windows Explorer may still show the old W icon
+due to the system icon cache (Issue #1431). If the Properties dialog also shows the wrong icon,
+clear the cache and restart Explorer:
+
+```bash
+rm -f "$env:LOCALAPPDATA\\IconCache.db"
+powershell -Command "Stop-Process -Name explorer -Force"
+```
+
 ### Window config
 
 - 600×640 default, 520×500 min
