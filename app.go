@@ -235,6 +235,14 @@ func (a *App) ShowMessage(dialogType, title, message string) (string, error) {
 			Buttons: []string{"是", "否"},
 		})
 		return resp, err
+	case "done":
+		_, err := runtime.MessageDialog(a.ctx, runtime.MessageDialogOptions{
+			Type:    runtime.QuestionDialog,
+			Title:   title,
+			Message: message,
+			Buttons: []string{"完成"},
+		})
+		return "完成", err
 	default:
 		return "", fmt.Errorf("unknown dialog type: %s", dialogType)
 	}

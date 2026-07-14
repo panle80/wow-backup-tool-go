@@ -17,7 +17,7 @@ func main() {
 	app := NewApp()
 
 	err := wails.Run(&options.App{
-		Title:     "WoW 插件备份恢复工具 v2.0 — 潘公子大人",
+		Title:     "WoW 插件备份恢复工具 v2.0.1",
 		Width:     600,
 		Height:    640,
 		MinWidth:  520,

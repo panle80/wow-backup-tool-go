@@ -5,23 +5,21 @@
 #  First-time setup:
 #    go install github.com/wailsapp/wails/v2/cmd/wails@latest
 #    wails doctor
+#
+#  Note: Apple Silicon only (M1/M2/M3). Intel Mac 不支持。
 # ============================================================
 
 set -e
 
-echo "[1/3] Installing frontend dependencies..."
+echo "[1/2] Installing frontend dependencies..."
 cd frontend && npm install && cd ..
 
-echo "[2/3] Building macOS .app bundle (Apple Silicon)..."
+echo "[2/2] Building macOS .app bundle (Apple Silicon)..."
 wails build -platform darwin/arm64 -clean
-
-echo "[3/3] Building macOS .app bundle (Intel)..."
-wails build -platform darwin/amd64 -clean
 
 echo ""
 echo "Build complete!"
 echo "  Apple Silicon: build/bin/WoWBackupTool.app"
-echo "  Intel:         build/bin/WoWBackupTool (darwin/amd64)"
 echo ""
 echo "To create a DMG:  hdiutil create -volname 'WoW Backup Tool' -srcfolder"
 echo "  'build/bin/WoWBackupTool.app' -ov -format UDZO 'WoWBackupTool.dmg'"

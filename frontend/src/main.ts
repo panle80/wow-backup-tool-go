@@ -1,4 +1,4 @@
-// WoW Backup Tool v2.0 — Tabbed UI
+// WoW Backup Tool v2.0.1 — Tabbed UI
 
 import {
   DetectInstallations,
@@ -236,6 +236,18 @@ async function browseInstallFor(sel: HTMLSelectElement, hint: HTMLDivElement) {
 // Helpers
 // ========================================================
 
+function showDone(msg: string): Promise<void> {
+  return new Promise(resolve => {
+    const overlay = document.createElement('div')
+    overlay.className = 'done-overlay'
+    overlay.innerHTML = `<div class="done-box"><p>${msg.replace(/\n/g,'<br>')}</p><button id="done-ok" class="btn-primary">完成</button></div>`
+    document.body.appendChild(overlay)
+    overlay.querySelector('#done-ok')!.addEventListener('click', () => {
+      overlay.remove(); resolve()
+    })
+  })
+}
+
 function getFolders(prefix: 'bk' | 'rs'): string[] {
   const f: string[] = []
   if (prefix === 'bk') {
@@ -281,8 +293,8 @@ EventsOn('backup:finished', async (path: string) => {
   status('备份完成')
   // Remember the directory for next time
   if (bkOutput.value) void SaveOutputDir(bkOutput.value)
-  const r = await ShowMessage('question','备份完成',`备份已创建:\n${path}`)
-  if (r === 'yes') void OpenFolder(path)
+  await showDone(`备份已创建:\n${path}`)
+  void OpenFolder(path)
 })
 EventsOn('backup:error', async (err: string) => {
   busy = false; setBusy(false)
@@ -299,9 +311,9 @@ EventsOn('restore:finished', async (result: RestoreResult) => {
   rsProgress.classList.add('hidden'); rsFill.style.width = '0%'
   status('还原完成')
   if (result && result.configKept)
-    await ShowMessage('info','还原完成','备份已成功还原！\n\n已保留当前系统的显示配置。')
+    await showDone('备份已成功还原！\n\n已保留当前系统的显示配置。')
   else
-    await ShowMessage('info','还原完成','备份已成功还原！')
+    await showDone('备份已成功还原！')
 })
 EventsOn('restore:error', async (err: string) => {
   busy = false; setBusy(false)

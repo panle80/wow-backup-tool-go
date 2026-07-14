@@ -30,7 +30,7 @@ type BackupManifest struct {
 func NewManifest(platforms []string) *BackupManifest {
 	return &BackupManifest{
 		Version:        "1.0",
-		ToolVersion:    "2.0.0",
+		ToolVersion:    "2.0.1",
 		SourcePlatform: runtime.GOOS,
 		Platforms:      platforms,
 		Files:          map[string]string{},

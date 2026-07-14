@@ -1,4 +1,4 @@
-WoW 插件备份恢复工具 v2.0
+WoW 插件备份恢复工具 v2.0.1
 ==========================
 
 【简介】
@@ -40,13 +40,45 @@ WoW 插件备份恢复工具 v2.0
   开发模式（热更新）:
     wails dev
 
-  Windows 构建:
-    wails build -platform windows/amd64 -clean
-    输出: build/bin/WoWBackupTool.exe（约 11 MB，单文件）
+  ── Windows 构建 ──
 
-  macOS 构建:
-    wails build -platform darwin/arm64 -clean
-    输出: build/bin/WoWBackupTool.app
+    直接构建:
+      wails build -platform windows/amd64 -clean
+      输出: build/bin/WoWBackupTool.exe（约 11 MB，单文件）
+
+    也可用项目自带的批处理:
+      build.bat
+
+  ── macOS 构建 ──
+
+    前置要求 (macOS):
+      1. 安装 Xcode CLI 工具:
+           xcode-select --install
+      2. 安装 Wails CLI（同上）
+      3. 确认环境正常:
+           wails doctor
+
+    构建 (仅支持 Apple Silicon):
+      wails build -platform darwin/arm64 -clean
+      输出: build/bin/WoWBackupTool.app
+
+    注意: 不支持 Intel Mac，仅支持 M 系列芯片 (M1/M2/M3)。
+
+  ── 用 Claude Code 构建 ──
+
+    Windows:
+      在项目目录下让 Claude Code 执行打包命令即可:
+        打包程序
+
+    macOS:
+      1. 将仓库克隆到 Mac
+      2. 用 Claude Code 打开项目目录
+      3. 直接说: "打包程序"
+      4. Claude Code 会自动安装依赖并执行:
+           wails build -platform darwin/arm64 -clean
+
+      注意: 如果 Mac 上缺少 Wails CLI 或 Xcode CLI 工具，
+      Claude Code 会提示安装命令。
 
 【自定义 WoW 路径】
   在程序目录下创建 config.json:
@@ -57,8 +89,8 @@ WoW 插件备份恢复工具 v2.0
 
 【技术信息】
   Go + Wails v2 + TypeScript
-  压缩级别 3（快速模式）
+  压缩级别 6（标准模式）
   进度刷新间隔 80ms（避免 UI 卡顿）
 
-  作者: 潘公子大人
+  版权: © 2026 潘公子大人
   License: MIT

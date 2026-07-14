@@ -17,9 +17,8 @@ wails dev
 # Windows build → build/bin/WoWBackupTool.exe
 wails build -platform windows/amd64 -clean
 
-# macOS build
+# macOS build (Apple Silicon only)
 wails build -platform darwin/arm64 -clean   # Apple Silicon
-wails build -platform darwin/amd64 -clean   # Intel
 
 # Type check / lint
 go vet ./...
