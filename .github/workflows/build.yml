@@ -78,20 +78,23 @@ jobs:
         with:
           path: artifacts
 
-      - name: Display structure of downloaded files
-        run: ls -R artifacts
-
-      - name: Zip macOS app
+      - name: Package artifacts
         run: |
+          VERSION=${{ github.ref_name }}
+          # Windows: zip the exe
+          cd artifacts/WoWBackupTool-Windows
+          zip ../../WoWBackupTool-${VERSION}-Windows-x64.zip WoWBackupTool.exe
+          cd ../..
+          # macOS: zip the .app bundle
           cd artifacts/WoWBackupTool-macOS-AppleSilicon
-          zip -r ../../WoWBackupTool-macOS-AppleSilicon.zip .
+          zip -r ../../WoWBackupTool-${VERSION}-macOS-arm64.zip .
+          cd ../..
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            artifacts/WoWBackupTool-Windows/WoWBackupTool.exe
-            WoWBackupTool-macOS-AppleSilicon.zip
+            WoWBackupTool-*.zip
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
