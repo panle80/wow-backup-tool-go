@@ -53,10 +53,11 @@ func (a *App) DetectInstallations() []WoWInstallation {
 	return a.manager.DetectInstallations()
 }
 
-// DetectFromPath tries to detect a WoW installation at the given path.
-// Returns nil if nothing was found.
-func (a *App) DetectFromPath(path string) *WoWInstallation {
-	return a.manager.DetectFromPath(path)
+// DetectAllFromPath returns every WoW installation found at the given path.
+// Used by the manual "浏览..." flow so that a folder containing several
+// version folders (e.g. _retail_ + _classic_ + _forever_) offers all of them.
+func (a *App) DetectAllFromPath(path string) []WoWInstallation {
+	return a.manager.DetectAllFromPath(path)
 }
 
 // ValidateInstallation checks which key folders exist under the given path.
@@ -146,11 +147,6 @@ func (a *App) GetBackupInfo(backupPath string) (map[string]interface{}, error) {
 	return a.manager.GetBackupInfo(backupPath)
 }
 
-// ListBackups returns metadata for all backup ZIPs in the given directory.
-func (a *App) ListBackups(directory string) ([]map[string]interface{}, error) {
-	return a.manager.ListBackups(directory)
-}
-
 // ---------------------------------------------------------------------------
 // Dialogs
 // ---------------------------------------------------------------------------
@@ -186,21 +182,16 @@ func (a *App) OpenFolder(path string) error {
 	return a.manager.OpenFolder(path)
 }
 
-// DefaultOutputPath returns the default backup directory.
-func (a *App) DefaultOutputPath() string {
-	return DefaultOutputDir()
-}
-
 // LoadSavedOutputDir returns the last used output directory, or empty string.
 // The frontend falls back to the default if empty.
 func (a *App) LoadSavedOutputDir() string {
-	return loadLastOutputDir()
+	return loadLastOutputDirOS()
 }
 
 // SaveOutputDir persists the given directory as the preferred save location.
 // Uses registry on Windows, UserDefaults on macOS — no config files created.
 func (a *App) SaveOutputDir(dir string) {
-	saveLastOutputDir(dir)
+	saveLastOutputDirOS(dir)
 }
 
 // ShowMessage shows a native message dialog.

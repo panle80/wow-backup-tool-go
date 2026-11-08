@@ -13,11 +13,16 @@ import (
 //go:embed all:frontend/dist
 var assets embed.FS
 
+// AppVersion is the user-visible application version. Keep it in sync with
+// wails.json (info.productVersion) and frontend/package.json —
+// version_test.go enforces both.
+const AppVersion = "2.1.0"
+
 func main() {
 	app := NewApp()
 
 	err := wails.Run(&options.App{
-		Title:     "WoW 插件备份恢复工具 v2.0.1",
+		Title:     "WoW 插件备份恢复工具 v" + AppVersion,
 		Width:     600,
 		Height:    640,
 		MinWidth:  520,

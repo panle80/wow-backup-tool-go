@@ -29,6 +29,7 @@ var versionNames = map[string]string{
 	"_classic_":       "经典怀旧服",
 	"_classic_era_":   "经典旧世",
 	"_classic_titan_": "大灾变怀旧服",
+	"_forever_":       "无限服",
 	"_classic_ptr_":   "怀旧服 PTR",
 	"_ptr_":           "PTR",
 	"_beta_":          "Beta",
@@ -116,7 +117,7 @@ func (d *WoWDetector) DetectAll() []WoWInstallation {
 
 	// Deduplicate by normalised path
 	seen := make(map[string]bool)
-	var unique []WoWInstallation
+	unique := make([]WoWInstallation, 0, len(installations))
 	for _, inst := range installations {
 		key := strings.ToLower(filepath.Clean(inst.Path))
 		if !seen[key] {
@@ -127,55 +128,92 @@ func (d *WoWDetector) DetectAll() []WoWInstallation {
 	return unique
 }
 
-// DetectFromPath tries to locate a WoW installation within the given path.
-func (d *WoWDetector) DetectFromPath(path string) *WoWInstallation {
+// DetectAllFromPath returns every WoW installation found within the given path.
+func (d *WoWDetector) DetectAllFromPath(path string) []WoWInstallation {
 	if !dirExists(path) {
-		return nil
+		return []WoWInstallation{}
 	}
 
+	// Case 1: path itself is a version folder (e.g. _retail_). An explicit
+	// selection is accepted even when the folder is empty — restoring into a
+	// freshly installed game (no Interface/WTF yet) must stay possible.
 	base := filepath.Base(path)
-
-	// Case 1: path itself is a version folder (e.g. _retail_)
-	if strings.HasPrefix(base, "_") && strings.HasSuffix(base, "_") {
-		dn := versionNames[base]
-		if dn == "" {
-			dn = base
-		}
-		return &WoWInstallation{Path: path, Version: base, DisplayName: dn}
+	if isVersionFolderName(base) {
+		return []WoWInstallation{newVersionInstallation(path, base)}
 	}
 
-	// Case 2: path contains version folders — pick the first one
+	// Case 2: path contains one or more version folders. Unknown folders are
+	// only listed when they contain game data, so stray `_old_`/`_backup_`
+	// folders cannot be auto-selected for a destructive restore.
 	entries, err := os.ReadDir(path)
-	if err == nil {
-		for _, e := range entries {
-			if !e.IsDir() {
-				continue
-			}
-			n := e.Name()
-			if strings.HasPrefix(n, "_") && strings.HasSuffix(n, "_") {
-				dn := versionNames[n]
-				if dn == "" {
-					dn = n
-				}
-				return &WoWInstallation{
-					Path:        filepath.Join(path, n),
-					Version:     n,
-					DisplayName: dn,
-				}
-			}
+	if err != nil {
+		return []WoWInstallation{}
+	}
+	var result []WoWInstallation
+	for _, e := range entries {
+		if !e.IsDir() {
+			continue
 		}
+		n := e.Name()
+		if !isVersionFolderName(n) {
+			continue
+		}
+		full := filepath.Join(path, n)
+		if !isKnownOrHasGameData(n, full) {
+			continue
+		}
+		result = append(result, newVersionInstallation(full, n))
+	}
+	if len(result) > 0 {
+		return result
 	}
 
 	// Case 3: Interface/ exists directly in path
 	if dirExists(filepath.Join(path, "Interface")) {
-		return &WoWInstallation{
+		return []WoWInstallation{{
 			Path:        path,
 			Version:     "",
 			DisplayName: "WoW (" + filepath.Base(path) + ")",
-		}
+		}}
 	}
 
-	return nil
+	return []WoWInstallation{}
+}
+
+func newVersionInstallation(path, version string) WoWInstallation {
+	dn := versionNames[version]
+	if dn == "" {
+		dn = version
+	}
+	return WoWInstallation{Path: path, Version: version, DisplayName: dn}
+}
+
+// isVersionFolderName reports whether name looks like a WoW version folder
+// such as _retail_ or _forever_.
+func isVersionFolderName(name string) bool {
+	return len(name) > 2 && strings.HasPrefix(name, "_") && strings.HasSuffix(name, "_")
+}
+
+// hasGameData reports whether path contains at least one folder this tool
+// backs up.
+func hasGameData(path string) bool {
+	for _, folder := range BackupFolders {
+		if dirExists(filepath.Join(path, folder)) {
+			return true
+		}
+	}
+	return false
+}
+
+// isKnownOrHasGameData decides whether a version folder found by scanning a
+// directory should be offered to the user. Known versions are always accepted
+// (a freshly installed game has no data folders yet); unknown ones must
+// contain game data so stray `_old_`/`_backup_` folders are ignored.
+func isKnownOrHasGameData(version, path string) bool {
+	if _, known := versionNames[version]; known {
+		return true
+	}
+	return hasGameData(path)
 }
 
 // ValidateInstallation checks which key subdirectories exist.
@@ -209,14 +247,15 @@ func (d *WoWDetector) detectFromPaths(paths []string) []WoWInstallation {
 				continue
 			}
 			n := e.Name()
-			if dn, ok := versionNames[n]; ok {
-				result = append(result, WoWInstallation{
-					Path:        filepath.Join(base, n),
-					Version:     n,
-					DisplayName: dn,
-				})
-				found = true
+			if !isVersionFolderName(n) {
+				continue
 			}
+			full := filepath.Join(base, n)
+			if !isKnownOrHasGameData(n, full) {
+				continue
+			}
+			result = append(result, newVersionInstallation(full, n))
+			found = true
 		}
 		// No version folder but Interface/ directly present
 		if !found && dirExists(filepath.Join(base, "Interface")) {
@@ -247,12 +286,6 @@ func expandUser(path string) string {
 		}
 	}
 	return path
-}
-
-// fileExists reports whether a regular file exists at path.
-func fileExists(path string) bool {
-	info, err := os.Stat(path)
-	return err == nil && !info.IsDir()
 }
 
 // logDetect is a tiny printf helper shared across files.

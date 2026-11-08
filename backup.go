@@ -55,9 +55,9 @@ func (m *BackupManager) DetectInstallations() []WoWInstallation {
 	return m.detector.DetectAll()
 }
 
-// DetectFromPath attempts to detect an installation at the given path.
-func (m *BackupManager) DetectFromPath(path string) *WoWInstallation {
-	return m.detector.DetectFromPath(path)
+// DetectAllFromPath returns every installation found at the given path.
+func (m *BackupManager) DetectAllFromPath(path string) []WoWInstallation {
+	return m.detector.DetectAllFromPath(path)
 }
 
 // ValidateInstallation checks which key folders exist under the given path.
@@ -133,6 +133,30 @@ func (m *BackupManager) RestoreBackup(
 		folders = BackupFolders
 	}
 
+	// ---- Validate the backup before touching the target ----
+	// Opening the ZIP and checking its top-level folders first means a
+	// corrupt/unreadable archive, or a backup that does not contain a selected
+	// folder, can never destroy the live installation.
+	info, err := m.zipper.GetBackupInfo(backupPath)
+	if err != nil {
+		return nil, fmt.Errorf("open backup: %w", err)
+	}
+	present := make(map[string]bool)
+	if top, ok := info["topFolders"].([]string); ok {
+		for _, folder := range top {
+			present[folder] = true
+		}
+	}
+	var missing []string
+	for _, folder := range folders {
+		if !present[folder] {
+			missing = append(missing, folder)
+		}
+	}
+	if len(missing) > 0 {
+		return nil, fmt.Errorf("备份中不包含以下文件夹: %s", strings.Join(missing, ", "))
+	}
+
 	// ---- Save local Config.wtf if requested ----
 	var savedConfig []byte
 	configKept := false
@@ -184,18 +208,8 @@ func (m *BackupManager) GetBackupInfo(backupPath string) (map[string]interface{}
 	return m.zipper.GetBackupInfo(backupPath)
 }
 
-// ListBackups returns metadata for all backups in a directory.
-func (m *BackupManager) ListBackups(directory string) ([]map[string]interface{}, error) {
-	dir := directory
-	if dir == "" {
-		dir = DefaultOutputDir()
-	}
-	return m.zipper.ListBackups(dir)
-}
-
 // OpenFolder opens the given path in the platform file manager.
 func (m *BackupManager) OpenFolder(path string) error {
-	// Platform-specific open is handled in open_*.go
 	return openInExplorer(path)
 }
 
@@ -212,7 +226,7 @@ func contains(slice []string, item string) bool {
 	return false
 }
 
-// platformOpen is implemented per-platform in open_*.go files.
+// openInExplorer is overridden per platform in platform_*.go.
 var openInExplorer = func(path string) error {
 	return fmt.Errorf("unsupported platform: %s", runtime.GOOS)
 }

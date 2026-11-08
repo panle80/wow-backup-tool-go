@@ -1,14 +1,16 @@
 {
   "name": "wow-backup-tool-frontend",
   "private": true,
-  "version": "2.0.1",
+  "version": "2.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit",
     "preview": "vite preview"
   },
   "devDependencies": {
+    "typescript": "^5.9.3",
     "vite": "^5.4.2"
   }
 }

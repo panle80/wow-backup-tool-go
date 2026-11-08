@@ -20,3 +20,9 @@ func loadLastOutputDirOS() string {
 func saveLastOutputDirOS(dir string) {
 	_ = exec.Command("defaults", "write", "pan.wowbackup", "LastOutputDir", dir).Run()
 }
+
+func init() {
+	openInExplorer = func(path string) error {
+		return exec.Command("open", "-R", path).Start()
+	}
+}

@@ -2,7 +2,11 @@
 
 package main
 
-import "golang.org/x/sys/windows/registry"
+import (
+	"os/exec"
+
+	"golang.org/x/sys/windows/registry"
+)
 
 const regKey = `SOFTWARE\pan.wowbackup`
 const regValue = "LastOutputDir"
@@ -27,4 +31,10 @@ func saveLastOutputDirOS(dir string) {
 	}
 	defer k.Close()
 	_ = k.SetStringValue(regValue, dir)
+}
+
+func init() {
+	openInExplorer = func(path string) error {
+		return exec.Command("explorer", "/select,"+path).Start()
+	}
 }

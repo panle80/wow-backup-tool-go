@@ -30,7 +30,7 @@ type BackupManifest struct {
 func NewManifest(platforms []string) *BackupManifest {
 	return &BackupManifest{
 		Version:        "1.0",
-		ToolVersion:    "2.0.1",
+		ToolVersion:    AppVersion,
 		SourcePlatform: runtime.GOOS,
 		Platforms:      platforms,
 		Files:          map[string]string{},
@@ -386,49 +386,6 @@ func (z *ZipManager) GetBackupInfo(backupPath string) (map[string]interface{}, e
 	}
 
 	return info, nil
-}
-
-// ListBackups returns metadata for all WoW backup ZIPs in a directory.
-func (z *ZipManager) ListBackups(dir string) ([]map[string]interface{}, error) {
-	if !dirExists(dir) {
-		return nil, nil
-	}
-
-	entries, err := os.ReadDir(dir)
-	if err != nil {
-		return nil, fmt.Errorf("read dir: %w", err)
-	}
-
-	var backups []map[string]interface{}
-	for _, e := range entries {
-		if e.IsDir() {
-			continue
-		}
-		name := e.Name()
-		if !strings.HasPrefix(name, "WoWBackup_") || !strings.HasSuffix(name, ".zip") {
-			continue
-		}
-
-		fp := filepath.Join(dir, name)
-		info, err := z.GetBackupInfo(fp)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "[zipper] failed to read %s: %v\n", fp, err)
-			continue
-		}
-		backups = append(backups, info)
-	}
-
-	for i := 0; i < len(backups); i++ {
-		for j := i + 1; j < len(backups); j++ {
-			di, _ := backups[i]["date"].(string)
-			dj, _ := backups[j]["date"].(string)
-			if dj > di {
-				backups[i], backups[j] = backups[j], backups[i]
-			}
-		}
-	}
-
-	return backups, nil
 }
 
 // ---------------------------------------------------------------------------

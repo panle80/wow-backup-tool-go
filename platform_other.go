@@ -2,5 +2,5 @@
 
 package main
 
-func loadLastOutputDirOS() string  { return "" }
+func loadLastOutputDirOS() string    { return "" }
 func saveLastOutputDirOS(dir string) {}

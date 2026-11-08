@@ -33,6 +33,13 @@ jobs:
       - name: Build Windows
         run: wails build -platform windows/amd64 -clean
 
+      # wails build has generated frontend/wailsjs and frontend/dist by now,
+      # so the Go package (which embeds dist) can be vetted and tested.
+      - name: Vet and test
+        run: |
+          go vet ./...
+          go test ./...
+
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
         with:
