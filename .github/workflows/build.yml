@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  actions: read
 
 jobs:
   build-windows:
@@ -40,7 +41,45 @@ jobs:
           go vet ./...
           go test ./...
 
+      # --- Windows code signing via SignPath Foundation (free for OSS) ---
+      # Enable signing by configuring these repository variables:
+      #   SIGNPATH_ENABLED=true
+      #   SIGNPATH_ORGANIZATION_ID, SIGNPATH_PROJECT_SLUG,
+      #   SIGNPATH_SIGNING_POLICY_SLUG, SIGNPATH_ARTIFACT_CONFIGURATION_SLUG
+      # and the SIGNPATH_API_TOKEN secret. Until then, releases stay unsigned
+      # and everything works as before.
+      - name: Upload unsigned artifact for signing
+        id: upload-unsigned
+        if: ${{ startsWith(github.ref, 'refs/tags/v') && vars.SIGNPATH_ENABLED == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: WoWBackupTool-Windows-unsigned
+          path: build/bin/WoWBackupTool.exe
+
+      - name: Submit SignPath signing request
+        id: signpath
+        if: ${{ startsWith(github.ref, 'refs/tags/v') && vars.SIGNPATH_ENABLED == 'true' }}
+        uses: signpath/github-action-submit-signing-request@v2
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG }}
+          signing-policy-slug: ${{ vars.SIGNPATH_SIGNING_POLICY_SLUG }}
+          artifact-configuration-slug: ${{ vars.SIGNPATH_ARTIFACT_CONFIGURATION_SLUG }}
+          github-artifact-id: ${{ steps.upload-unsigned.outputs.artifact-id }}
+          wait-for-completion: true
+          wait-for-completion-timeout-in-seconds: 1800
+          output-artifact-directory: signed
+
+      - name: Upload signed Windows artifact
+        if: ${{ startsWith(github.ref, 'refs/tags/v') && vars.SIGNPATH_ENABLED == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: WoWBackupTool-Windows
+          path: signed/WoWBackupTool.exe
+
       - name: Upload Windows artifact
+        if: ${{ !(startsWith(github.ref, 'refs/tags/v') && vars.SIGNPATH_ENABLED == 'true') }}
         uses: actions/upload-artifact@v4
         with:
           name: WoWBackupTool-Windows
